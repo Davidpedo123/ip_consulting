@@ -1,7 +1,3 @@
-# IP Consulting Project
-
-API for IPv4 and IPv6 address lookup using Redis cache and local BIN databases.
-
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -29,9 +25,24 @@ uvicorn app.main:app --reload
 
 ## 🏗️ Architecture
 - **src/app**: FastAPI application and configuration.
-- **src/repository**: Data access layer for Redis and BIN files.
-- **src/user_case**: Business logic and validation.
+- **src/repository**: Data access layer for Redis and BIN files. Optimized with `mget`/`mset` and pipelines for bulk operations.
+- **src/user_case**: Business logic and validation. Includes `GetBulkIPInfoUseCase` for high-performance concurrent lookups.
 - **src/namespace.py**: Unified import system using absolute paths from `src/`.
+
+## 🔌 API Endpoints
+
+### Single IP Lookup
+- **GET** `/get-ip?ip=<ip_address>`
+- Returns information for a single IP.
+
+### Bulk IP Lookup (High Performance)
+- **POST** `/get-ips`
+- **Body**: `{ "ips": ["ip1", "ip2", ...] }`
+- Features:
+  - **Deduplication**: Avoids redundant lookups for duplicate IPs in the list.
+  - **Bulk Cache**: Uses Redis `MGET` to fetch multiple records in a single round-trip.
+  - **Concurrency**: Parallelizes BIN file lookups using `ThreadPoolExecutor` (max 10 workers).
+  - **Bulk Storage**: Uses Redis pipelines to save new results efficiently.
 
 ## ✅ Validation Layer
 - **API level**: Input validation using FastAPI Query parameters.
@@ -52,3 +63,10 @@ $env:PYTHONPATH = "c:\Users\etejada\Downloads\ip_consultig"; python -m pytest sr
 ## 🛠️ Infrastructure
 - **infra/docker**: Dockerfiles for containerization.
 - **ci-cd**: Basic CI/CD pipeline definitions.
+
+## ⚖️ License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+### Attribution
+This project uses IP2Location LITE data available from [https://lite.ip2location.com](https://lite.ip2location.com).
+The database is licensed under the [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
