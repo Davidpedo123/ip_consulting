@@ -19,12 +19,35 @@ class IPRepository:
                 print(f"Error al consultar Redis: {e}")
         return None
 
+    def get_many_from_cache(self, ips: list[str]):
+        if self.redis_client:
+            try:
+                cached_values = self.redis_client.mget(ips)
+                results = {}
+                for ip, val in zip(ips, cached_values):
+                    if val:
+                        results[ip] = json.loads(val.decode("UTF-8"))
+                return results
+            except Exception as e:
+                print(f"Error en mget de Redis: {e}")
+        return {}
+
     def save_to_cache(self, ip: str, data: dict):
         if self.redis_client:
             try:
                 self.redis_client.set(ip, json.dumps(data))
             except Exception as e:
                 print(f"Error al guardar en Redis: {e}")
+
+    def save_many_to_cache(self, mapping: dict[str, dict]):
+        if self.redis_client and mapping:
+            try:
+                pipeline = self.redis_client.pipeline()
+                for ip, data in mapping.items():
+                    pipeline.set(ip, json.dumps(data))
+                pipeline.execute()
+            except Exception as e:
+                print(f"Error en mset/pipeline de Redis: {e}")
 
     def get_from_bin(self, ip: str):
         try:

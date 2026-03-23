@@ -16,8 +16,12 @@ import ipaddress
 from src.app.config.configDB import redis_client
 from src.repository.ip_repository import IPRepository
 from src.user_case.get_ip_info_use_case import GetIPInfoUseCase
+from src.user_case.get_bulk_ip_info_use_case import GetBulkIPInfoUseCase
 
 app = FastAPI(title="IP Consulting API")
+
+class BulkIPRequest(BaseModel):
+    ips: list[str]
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,6 +38,7 @@ app.add_middleware(
 
 ip_repo = IPRepository(redis_client=redis_client)
 get_ip_use_case = GetIPInfoUseCase(ip_repository=ip_repo)
+get_bulk_ip_use_case = GetBulkIPInfoUseCase(ip_repository=ip_repo)
 
 @app.get("/get-ip")
 async def get_ip(ip: str = Query(..., description="The IP address to lookup")):
@@ -46,5 +51,16 @@ async def get_ip(ip: str = Query(..., description="The IP address to lookup")):
         raise e
     except Exception as e:
         print(f"Error general en el controlador: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/get-ips")
+async def get_ips(request: BulkIPRequest):
+    try:
+        results = get_bulk_ip_use_case.execute(request.ips)
+        return results
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error en bulk lookup: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
