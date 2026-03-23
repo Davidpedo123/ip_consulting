@@ -2,6 +2,8 @@ import os
 import json
 import IP2Location
 import geoip2.database
+import sqlite3
+from typing import Optional, List, Dict, Any
 
 class IPRepository:
     """
@@ -16,6 +18,7 @@ class IPRepository:
         self.db4_path = os.path.join(base_path, 'data', 'IP2LOCATION-LITE-DB3.BIN')
         self.db6_path = os.path.join(base_path, 'data', 'DB1_IP6.BIN')
         self.geoip_db_path = os.path.join(base_path, 'data', 'GeoLite2-City.mmdb')
+        self.sqlite_db_path = os.path.join(base_path, 'data', 'unified_data.db')
 
     def get_from_cache(self, ip: str):
         """
@@ -103,3 +106,52 @@ class IPRepository:
         except Exception as e:
             print(f"Error al consultar base de datos BIN: {e}")
             raise e
+
+    def search(self, query: Optional[str] = None, country: Optional[str] = None, 
+               region: Optional[str] = None, city: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Searches for locations in the unified SQLite index by keywords.
+        """
+        if not os.path.exists(self.sqlite_db_path):
+            print(f"Búsqueda abortada: El índice SQLite no existe en {self.sqlite_db_path}")
+            return []
+
+        conn = None
+        try:
+            conn = sqlite3.connect(self.sqlite_db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+
+            sql = "SELECT country_name, region_name, city_name, latitude, longitude FROM ip_index WHERE 1=1"
+            params: List[Any] = []
+
+            if query:
+                sql += " AND (city_name LIKE ? OR region_name LIKE ? OR country_name LIKE ?)"
+                params.extend([f"%{query}%", f"%{query}%", f"%{query}%"])
+            
+            if country:
+                sql += " AND country_name LIKE ?"
+                params.append(f"%{country}%")
+            
+            if region:
+                sql += " AND region_name LIKE ?"
+                params.append(f"%{region}%")
+            
+            if city:
+                sql += " AND city_name LIKE ?"
+                params.append(f"%{city}%")
+
+            sql += " LIMIT ?"
+            params.append(limit)
+
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            
+            return [dict(row) for row in rows]
+        except Exception as e:
+            print(f"Error en búsqueda SQLite: {e}")
+            return []
+        finally:
+            if conn:
+                conn.close()
+        return []
