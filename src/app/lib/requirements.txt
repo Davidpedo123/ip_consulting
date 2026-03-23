@@ -1,0 +1,5 @@
+fastapi[all]
+uvicorn
+jinja2
+IP2Location
+redis
