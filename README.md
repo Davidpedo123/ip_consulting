@@ -23,6 +23,13 @@ cd src
 uvicorn app.main:app --reload
 ```
 
+### 🗂️ IP Data Indexing (New)
+To enable keyword search and unify the databases, run the indexing script once:
+```bash
+python src/utils/generate_index.py
+```
+This generates `src/repository/data/unified_data.db` by merging IP2Location and GeoIP2 data.
+
 ## 🏗️ Architecture
 - **src/app**: FastAPI application and configuration.
 - **src/repository**: Data access layer for Redis and BIN files. Optimized with `mget`/`mset` and pipelines for bulk operations.
@@ -44,6 +51,11 @@ uvicorn app.main:app --reload
   - **Concurrency**: Parallelizes BIN file lookups using `ThreadPoolExecutor` (max 10 workers).
   - **Bulk Storage**: Uses Redis pipelines to save new results efficiently.
 
+### Keyword Search (Unified Data)
+- **GET** `/search?q=<keyword>&limit=10`
+- **Params**: `q` (any field), `country`, `region`, `city`, `limit`.
+- Returns coordinates and location names from the unified SQLite index.
+
 ## ✅ Validation Layer
 - **API level**: Input validation using FastAPI Query parameters.
 - **Use Case level**: Strict IP format validation using `ipaddress` module.
@@ -56,9 +68,9 @@ $env:PYTHONPATH = "c:\Users\etejada\Downloads\ip_consultig"; python -m pytest sr
 ```
 
 ### Included Tests:
-- `test_validation.py`: IP format and logic validation.
-- `test_connection.py`: Database and cache connectivity.
 - `test_integration.py`: API endpoint integration tests.
+- `test_geoip_centralization.py`: Verification of merged Lat/Long data.
+- `test_search_sqlite.py`: Verification of the keyword search feature.
 
 ## 🛠️ Infrastructure
 - **infra/docker**: Dockerfiles for containerization.
