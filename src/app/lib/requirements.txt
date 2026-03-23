@@ -3,3 +3,4 @@ uvicorn
 jinja2
 IP2Location
 redis
+geoip2
