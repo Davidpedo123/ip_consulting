@@ -42,6 +42,8 @@ This generates `src/repository/data/unified_data.db` by merging IP2Location and 
 - **GET** `/get-ip?ip=<ip_address>`
 - Returns information for a single IP.
 
+![Single IP Lookup Example](example/unitip.png)
+
 ### Bulk IP Lookup (High Performance)
 - **POST** `/get-ips`
 - **Body**: `{ "ips": ["ip1", "ip2", ...] }`
@@ -51,11 +53,16 @@ This generates `src/repository/data/unified_data.db` by merging IP2Location and 
   - **Concurrency**: Parallelizes BIN file lookups using `ThreadPoolExecutor` (max 10 workers).
   - **Bulk Storage**: Uses Redis pipelines to save new results efficiently.
 
+![Bulk IP Request Example](example/bulkip.png)
+
+
 ### Keyword Search (Unified Data)
 - **GET** `/search?q=<keyword>&limit=10`
 - **Params**: `q` (any field), `country`, `region`, `city`, `limit`.
 - Returns coordinates and location names from the unified SQLite index.
 
+![Search Endpoint Example](example/search.png)
+![Bulk IP Response Example](example/bulkresponse.png)
 ## ✅ Validation Layer
 - **API level**: Input validation using FastAPI Query parameters.
 - **Use Case level**: Strict IP format validation using `ipaddress` module.
@@ -64,7 +71,7 @@ This generates `src/repository/data/unified_data.db` by merging IP2Location and 
 ## 🧪 Testing
 Run the complete test suite from the project root:
 ```bash
-$env:PYTHONPATH = "c:\Users\etejada\Downloads\ip_consultig"; python -m pytest src/tests
+python -m pytest src/tests
 ```
 
 ### Included Tests:
