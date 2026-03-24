@@ -64,7 +64,7 @@ This generates `src/repository/data/unified_data.db` by merging IP2Location and 
 ## 🧪 Testing
 Run the complete test suite from the project root:
 ```bash
-$env:PYTHONPATH = "c:\Users\etejada\Downloads\ip_consultig"; python -m pytest src/tests
+python -m pytest src/tests
 ```
 
 ### Included Tests:
